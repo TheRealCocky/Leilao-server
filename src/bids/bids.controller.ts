@@ -15,14 +15,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('bids')
-@UseGuards(JwtAuthGuard, RolesGuard) // ✅ Protege todas as rotas do controller
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class BidsController {
   constructor(private readonly bidsService: BidsService) {}
 
   @Post()
   @Roles(Role.BUYER)
   async create(@Req() req, @Body() dto: CreateBidDto) {
-    console.log('Usuário autenticado:', req.user); // 👈 debug
     return this.bidsService.createBid(dto, req.user.userId);
   }
 
