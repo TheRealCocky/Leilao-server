@@ -10,7 +10,7 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true, // remove campos que não estão no DTO
       forbidNonWhitelisted: true, // lança erro se o body tiver campos extras
-      transform: true, // transforma payloads para instâncias das classes DTO
+      transform: true,
     }),
   );
 
