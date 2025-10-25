@@ -18,6 +18,8 @@ model User {
   bids         Bid[]
   createdAt    DateTime       @default(now())
   Notification Notification[]
+
+  Auction Auction[] @relation("WinnerRelation")
 }
 
 model Auction {
@@ -32,6 +34,8 @@ model Auction {
   owner         User?         @relation(fields: [ownerId], references: [id])
   bids          Bid[]
   createdAt     DateTime      @default(now())
+  winnerId      String?       @db.ObjectId
+  winner        User?         @relation("WinnerRelation", fields: [winnerId], references: [id])
 }
 
 model Bid {

@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
 import { CreateAuctionDto } from './dto/create-auction.dto';
@@ -22,6 +23,9 @@ import { Role } from '../common/enums/role.enum';
 export class AuctionsController {
   constructor(private readonly auctionsService: AuctionsService) {}
 
+  /**
+   * Criar um leilão (apenas SELLER ou ADMIN)
+   */
   @Roles(Role.SELLER, Role.ADMIN)
   @Post()
   create(@Body() dto: CreateAuctionDto, @Request() req) {
@@ -29,27 +33,56 @@ export class AuctionsController {
     return this.auctionsService.create({ ...dto, ownerId });
   }
 
+  /**
+   * Listar todos os leilões (todos os papéis)
+   */
   @Roles(Role.BUYER, Role.SELLER, Role.ADMIN)
   @Get()
   findAll() {
     return this.auctionsService.getAllAuctions();
   }
 
+  /**
+   * Obter detalhes de um leilão específico
+   */
   @Roles(Role.BUYER, Role.SELLER, Role.ADMIN)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.auctionsService.getAuctionById(id);
   }
 
+  /**
+   * Atualizar um leilão (apenas SELLER do próprio leilão ou ADMIN)
+   */
   @Roles(Role.SELLER, Role.ADMIN)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateAuctionDto) {
-    return this.auctionsService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateAuctionDto, @Request() req) {
+    return this.auctionsService.update(id, dto, req.user);
   }
 
+  /**
+   * Deletar um leilão (apenas ADMIN)
+   */
   @Roles(Role.ADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.auctionsService.deleteAuction(id);
+  }
+
+  /**
+   * Dar um lance (apenas BUYER)
+   */
+  @Roles(Role.BUYER)
+  @Post(':id/bid')
+  async placeBid(
+    @Param('id') id: string,
+    @Body() body: { amount: number },
+    @Request() req,
+  ) {
+    if (!body.amount || body.amount <= 0) {
+      throw new BadRequestException('Invalid bid amount');
+    }
+    const userId = req.user.userId;
+    return this.auctionsService.placeBid({ auctionId: id, amount: body.amount, userId });
   }
 }
